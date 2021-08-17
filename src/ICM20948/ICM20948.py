@@ -230,7 +230,7 @@ class ICM20948(ICM20938_REGISTERS, ICM20948_SETTINGS):
 
         """
 
-        logging.debug(f'{time.time()}: updating data via triggered interrupt pin {pin}')
+        #logging.debug(f'{time.time()}: updating data via triggered interrupt pin {pin}')
 
         # Read all of the readings starting at _AGB0_REG_ACCEL_XOUT_H
         numbytes = 14 + 9 # Read Accel, gyro, temp, and 9 bytes of mag

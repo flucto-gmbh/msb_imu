@@ -6,8 +6,7 @@ import zmq
 import logging
 
 # TODO:
-# - implement zeroMQ pubslisher
-# - 
+# - no ipc flag einbauen fuer testing
 
 try:
     from config import  init
@@ -20,6 +19,22 @@ try:
 except ImportError:
     print(f'failed to import ICM20948 module')
     sys.exit(-1)
+
+def sync(bind_to):
+    # use bind socket + 1
+    sync_with = ':'.join(
+        bind_to.split(':')[:-1] + [str(int(bind_to.split(':')[-1]) + 1)]
+    )
+
+    logging.debug(f'additional socket to start communication {sync_with}')
+
+    ctx = zmq.Context.instance()
+    s = ctx.socket(zmq.REP)
+    s.bind(sync_with)
+    print("Waiting for subscriber to connect...")
+    s.recv()
+    print("   Done.")
+    s.send(b'GO')
 
 def main():
 
@@ -41,12 +56,14 @@ def main():
 
     imu.begin()
 
-    connect_to = f'{config["ipc_protocol"]}://localhost:{config["ipc_port"]}'
+    connect_to = f'{config["ipc_protocol"]}:///tmp/msb:{config["ipc_port"]}'
     logging.debug(f'binding to {connect_to} for zeroMQ IPC')
     ctx = zmq.Context()
     s = ctx.socket(zmq.PUB)
     s.connect(connect_to)
     logging.debug(f'connected to zeroMQ IPC socket')
+
+    #sync(connect_to)
 
     logging.debug('entering endless loop')
 
@@ -56,6 +73,8 @@ def main():
         if config['print']:
             print(','.join([f'{i:.6f}' for i in data]))
         
+        s.send_pyobj(data)
+
         time.sleep(1/config['sample_rate'])
 
 if __name__ == '__main__':
