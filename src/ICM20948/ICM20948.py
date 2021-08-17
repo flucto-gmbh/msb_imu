@@ -1,6 +1,8 @@
 import smbus
 import time
 import uptime
+import logging
+import sys
 
 import RPi.GPIO as gpio
 
@@ -117,8 +119,8 @@ class ICM20948(ICM20938_REGISTERS, ICM20948_SETTINGS):
         if i2c_driver == None:
             self._i2c = smbus.SMBus(1)
             if self._i2c == None:
-                print("Unable to load I2C driver for this platform.")
-                return
+                logging.error("Unable to load I2C driver for this platform.")
+                sys.exit(-1)
         else:
             self._i2c = i2c_driver
 
@@ -126,7 +128,7 @@ class ICM20948(ICM20938_REGISTERS, ICM20948_SETTINGS):
             self._selected_accelerometer_sensitvity = self._accelerometer_sensitivity[accelerometer_sensitivity]
             self._selected_accelerometer_scale = self._accelerometer_scale[accelerometer_sensitivity]
         else: 
-            print("invalid accelerometer sensitivity, defaulting to +- 2g")
+            logging.warning("invalid accelerometer sensitivity, defaulting to +- 2g")
             self._selected_accelerometer_sensitvity = self._accelerometer_sensitivity['2g']
             self._selected_accelerometer_scale = self._accelerometer_scale['2g']
 
@@ -134,7 +136,7 @@ class ICM20948(ICM20938_REGISTERS, ICM20948_SETTINGS):
             self._selected_gyroscope_sensitvity = self._gyroscope_sensitivity[gyroscope_sensitivity]
             self._selected_gyroscope_scale = self._gyroscope_scale[gyroscope_sensitivity]
         else:
-            print('invalid gyroscope sensitivity, defaulting to +- 250 degree / second')
+            logging.warning('invalid gyroscope sensitivity, defaulting to +- 250 degree / second')
             self._selected_gyroscope_sensitvity = self._gyroscope_sensitivity['250dps']
             self._selected_gyroscope_scale = self._gyroscope_scale['250dps']
 
@@ -157,10 +159,10 @@ class ICM20948(ICM20938_REGISTERS, ICM20948_SETTINGS):
         self._set_bank(0)
         chip_ID = self._i2c.read_byte_data(self.address, self._AGB0_REG_WHO_A_M_I)
         if not chip_ID in _validChipIDs:
-            print("Invalid Chip ID: 0x%.2X" % chip_ID)
-            return False
+            logging.error("Invalid Chip ID: 0x%.2X" % chip_ID)
+            sys.exit(-1)
         else:
-            if self._verbose: print(f'sensor {chip_ID} is online')
+            logging.debug(f'sensor {chip_ID} is online')
         
         # software reset
         self.sw_reset()
@@ -218,7 +220,7 @@ class ICM20948(ICM20938_REGISTERS, ICM20948_SETTINGS):
             self._temp_raw,
         ]
 
-    def _update_accel_gyro_mag_temp(self, channel):
+    def _update_accel_gyro_mag_temp(self, pin : int) -> bool:
 
         """ 
             Reads and updates raw values from accel, gyro, mag and temp of the ICM90248 module
@@ -228,7 +230,7 @@ class ICM20948(ICM20938_REGISTERS, ICM20948_SETTINGS):
 
         """
 
-        if channel and self._verbose: print(f'{time.time()}: updating data via triggered interrupt pin {channel}')
+        logging.debug(f'{time.time()}: updating data via triggered interrupt pin {pin}')
 
         # Read all of the readings starting at _AGB0_REG_ACCEL_XOUT_H
         numbytes = 14 + 9 # Read Accel, gyro, temp, and 9 bytes of mag
@@ -282,19 +284,19 @@ class ICM20948(ICM20938_REGISTERS, ICM20948_SETTINGS):
         self._set_bank(0)
         register = self._i2c.read_byte_data(self.address, self._AGB0_REG_INT_ENABLE_1)
         
-        if self._verbose: print(f'_AGB0_REG_INT_ENABLE_1: {register}')
+        logging.debug(f'_AGB0_REG_INT_ENABLE_1: {register}')
 
         register = (1<<0)
 
         # Write register
         self._set_bank(0)
         ret = self._i2c.write_byte_data(self.address, self._AGB0_REG_INT_ENABLE_1, register)
-        if self._verbose: print(f'enabling interrupt returned {ret}')
+        logging.debug(f'enabling interrupt returned {ret}')
 
         self._set_bank(0)
         register = self._i2c.read_byte_data(self.address, self._AGB0_REG_INT_ENABLE_1)
         
-        if self._verbose: print(f'_AGB0_REG_INT_ENABLE_1: {register}')
+        logging.debug(f'_AGB0_REG_INT_ENABLE_1: {register}')
         if not register == 1:
             raise Exception("failed to activate interrupt")
 
@@ -476,8 +478,8 @@ class ICM20948(ICM20938_REGISTERS, ICM20948_SETTINGS):
 
         ret = self._i2c.write_byte_data(self.address, self._AGB2_REG_GYRO_SMPLRT_DIV, register)	
 
-        if self._verbose: print(f'write function returned {ret}')
-        if self._verbose: print(f'current output divisor {self.get_ODR_gyro()}')
+        logging.debug(f'write function returned {ret}')
+        logging.debug(f'current output divisor {self.get_ODR_gyro()}')
 
     def set_DLPF_cfg_accel(self, dlpcfg):
         """ 
@@ -491,7 +493,7 @@ class ICM20948(ICM20938_REGISTERS, ICM20948_SETTINGS):
         self._set_bank(2)
         register = self._i2c.read_byte_data(self.address, self._AGB2_REG_ACCEL_CONFIG_1)
 
-        if self._verbose: print(f'current low pass filer for acceleration is: {register}')
+        logging.debug(f'current low pass filer for acceleration is: {register}')
 
         register &= ~(0b00111000) # clear bits 5:3 (0b00XX.X000)
 
@@ -513,7 +515,7 @@ class ICM20948(ICM20938_REGISTERS, ICM20948_SETTINGS):
         self._set_bank(2)
         register = self._i2c.read_byte_data(self.address, self._AGB2_REG_GYRO_CONFIG_1)
 
-        if self._verbose: print(f'current low pass filer for gyroscope is: {register}')
+        logging.debug(f'current low pass filer for gyroscope is: {register}')
         
         register &= ~(0b00111000) # clear bits 5:3 (0b00XX.X000)
 

@@ -5,6 +5,10 @@ import sys
 import zmq
 import logging
 
+# TODO:
+# - implement zeroMQ pubslisher
+# - 
+
 try:
     from config import  init
 except ImportError:
@@ -19,42 +23,40 @@ except ImportError:
 
 def main():
 
-    args = init()
+    config = init()
 
-    # calculate time.sleep time
-    # 1100/(1+output_data_div)
+    dt_sleep = 1/config['sample_rate']
+    logging.debug(f'sample rate set to {config["sample_rate"]}, sleeping for {dt_sleep} s')
+
+    logging.debug('inititating sensor..')
 
     imu = IMU.ICM20948(
-        verbose=args['verbose'],
-        output_data_div=args['imu_output_div'],
-        accelerometer_sensitivity=args['acc_range'],
-        gyroscope_sensitivity=args['gyro_range'],
+        verbose=config['verbose'],
+        output_data_div=config['imu_output_div'],
+        accelerometer_sensitivity=config['acc_range'],
+        gyroscope_sensitivity=config['gyro_range'],
     )
+
+    logging.debug('.. sensor init done')
 
     imu.begin()
 
-    """
-    try:
-        socket.recv()
-    except KeyboardInterrupt:
-        print("W: interrupt received, stopping...")
-    finally:
-        # clean up
-        socket.close()
-        context.term()
+    connect_to = f'{config["ipc_protocol"]}://localhost:{config["ipc_port"]}'
+    logging.debug(f'binding to {connect_to} for zeroMQ IPC')
+    ctx = zmq.Context()
+    s = ctx.socket(zmq.PUB)
+    s.connect(connect_to)
+    logging.debug(f'connected to zeroMQ IPC socket')
 
-    """
+    logging.debug('entering endless loop')
 
     while True:
         data = imu.get_data()
 
-        if args['print']:
+        if config['print']:
             print(','.join([f'{i:.6f}' for i in data]))
-
-        if args['logfile']:
-            pass
         
-        time.sleep(1/args['sample_rate'])
+        time.sleep(1/config['sample_rate'])
 
 if __name__ == '__main__':
     main()
