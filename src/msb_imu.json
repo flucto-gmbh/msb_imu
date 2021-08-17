@@ -1,0 +1,17 @@
+{
+    "verbose": false,
+    "print": true,
+    "logfile": "",
+    "imu_output_div": 21,
+    "sample_rate": 50,
+    "acc_range": "2g",
+    "acc_filter": 1,
+    "gyro_range": "500dps",
+    "gyro_filter": 1,
+    "config_file": "",
+    "dump_config_file": "msb_imu.json",
+    "udp_stream": false,
+    "udp_address": "192.168.4.1",
+    "udp_port": 9870,
+    "profile": false
+}
