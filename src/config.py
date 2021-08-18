@@ -146,6 +146,13 @@ def parse_arguments() -> dict:
         action='store_true'
     )
 
+    arg_parser.add_argument(
+        '--id',
+        help='id to identify the imu by',
+        default='imu',
+        type=str
+    )
+
     return arg_parser.parse_args().__dict__
 
 def init() -> dict:

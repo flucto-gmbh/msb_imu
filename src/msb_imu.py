@@ -50,16 +50,21 @@ def main():
     #sync(connect_to)
 
     logging.debug('entering endless loop')
+    
+    try:
+        while True:
 
-    while True:
-        data = imu.get_data()
+            data = {config['id'] : imu.get_data()}
 
-        if config['print']:
-            print(','.join([f'{i:.6f}' for i in data]))
-        
-        s.send_pyobj(data)
+            if config['print']:
+                print(json.dumps(data))
 
-        time.sleep(1/config['sample_rate'])
+            s.send_pyobj(data)
+
+            time.sleep(1/config['sample_rate'])
+    except KeyboardInterrupt:
+        logging.info('msb_imu bye')
+        sys.exit(0)
 
 if __name__ == '__main__':
     main()
