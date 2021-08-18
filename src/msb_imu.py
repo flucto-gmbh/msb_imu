@@ -20,22 +20,6 @@ except ImportError:
     print(f'failed to import ICM20948 module')
     sys.exit(-1)
 
-def sync(bind_to):
-    # use bind socket + 1
-    sync_with = ':'.join(
-        bind_to.split(':')[:-1] + [str(int(bind_to.split(':')[-1]) + 1)]
-    )
-
-    logging.debug(f'additional socket to start communication {sync_with}')
-
-    ctx = zmq.Context.instance()
-    s = ctx.socket(zmq.REP)
-    s.bind(sync_with)
-    print("Waiting for subscriber to connect...")
-    s.recv()
-    print("   Done.")
-    s.send(b'GO')
-
 def main():
 
     config = init()
