@@ -4,6 +4,7 @@ import signal       # handles signals
 import sys
 import zmq
 import logging
+import json
 
 # TODO:
 # - no ipc flag einbauen fuer testing
