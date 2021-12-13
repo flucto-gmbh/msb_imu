@@ -1,6 +1,4 @@
-import argparse
 import time
-import signal       # handles signals
 import sys
 import zmq
 import logging
@@ -12,7 +10,7 @@ import json
 try:
     from config import  init
 except ImportError:
-    print(f'faild to init function from config.py')
+    print(f'faild to import init function from config.py')
     sys.exit(-1)
 
 try:

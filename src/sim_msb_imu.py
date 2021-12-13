@@ -2,6 +2,8 @@ import zmq
 import sys
 import logging
 import uptime
+import time
+from math import sin, cos, pi
 from multiprocessing import Process
 ## needs python 3.10
 # from dataclass import dataclass
@@ -28,6 +30,7 @@ class IMU():
 
     device_name = "ICM20948_SIM"
     _data_generator_process = None
+    _delta_t = 0.2
 
     _acceleration_x_raw = _acceleration_y_raw = _acceleration_z_raw = 0
     _gyroscope_x_raw = _gyroscope_y_raw = _gyroscope_z_raw = 0
@@ -39,6 +42,14 @@ class IMU():
     
     def __init__(self):
         pass
+    
+    def __del__(self):
+        self._data_generator_process.terminate()
+        try:
+            self._data_generator_process.close()
+        except:
+            logging.debug('failed to close data generator process, killing it...')
+            self._data_generator_process.kill()
 
     def _update_data(self):
         
@@ -47,9 +58,17 @@ class IMU():
         provide updated values of the simulated sensor
         """
         
-        self._update_time = time.time()
-        self._update_time_uptime = uptime.uptime()
-        
+        while True:
+
+            logging.debug("updating data")
+            self._update_time = time.time()
+            self._update_time_uptime = uptime.uptime()
+            
+            self._acceleration_x_raw = self._acceleration_y_raw = self._acceleration_z_raw = sin(self._update_time*2*pi)
+            self._gyroscope_x_raw = self._gyroscope_y_raw = self._gyroscope_z_raw = cos(self._update_time*2*pi)
+            self._mag_x_raw = self._mag_y_raw = self._mag_z_raw = -1 * sin(self._update_time*2*pi)
+            
+            time.sleep(self._delta_t)
         
         
     def begin(self):
@@ -62,13 +81,13 @@ class IMU():
             self._update_time,
             self._update_time_uptime,
             
-            self._acceleration_x_raw/self._selected_accelerometer_scale,
-            self._acceleration_y_raw/self._selected_accelerometer_scale,
-            self._acceleration_z_raw/self._selected_accelerometer_scale,
+            self._acceleration_x_raw,
+            self._acceleration_y_raw,
+            self._acceleration_z_raw,
 
-            self._gyroscope_x_raw/self._selected_gyroscope_scale,
-            self._gyroscope_y_raw/self._selected_gyroscope_scale,
-            self._gyroscope_z_raw/self._selected_gyroscope_scale,
+            self._gyroscope_x_raw,
+            self._gyroscope_y_raw,
+            self._gyroscope_z_raw,
             
             self._mag_x_raw,
             self._mag_y_raw,
@@ -76,8 +95,6 @@ class IMU():
             
             self._temp_raw,
         ]
-
-    
 
 
 def main():
