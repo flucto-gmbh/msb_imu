@@ -3,9 +3,9 @@ import sys
 import logging
 import uptime
 import time
+import json
 from math import sin, cos, pi
-from multiprocessing import Process
-## needs python 3.10
+# needs python 3.10
 # from dataclass import dataclass
 
 try:
@@ -15,14 +15,13 @@ except ImportError as e:
     sys.exit(-1)
 
 class IMU():
-    
-    """
-    ICM-20948
 
-        : param address: I2C address to use for the motion sensor. 
+    """ ICM-20948
+
+        : param address: I2C address to use for the motion sensor.
                          The sensor has two different possible addresses (0x68 and 0x69)
                          depending on wether AD0 is high (0x69) or low (0x68)
-        : param i2c_bus: if an I2C bus has already been initiated somewehere else, 
+        : param i2c_bus: if an I2C bus has already been initiated somewehere else,
                          use this parameter to pass the bus object to the object.
         : return:        ICM20938 object
         : rtype:         Object
@@ -36,51 +35,40 @@ class IMU():
     _gyroscope_x_raw = _gyroscope_y_raw = _gyroscope_z_raw = 0
     _mag_x_raw = _mag_y_raw = _mag_z_raw = _mag_stat_1 = _mag_stat_2 = 0
     _temp_raw = 0
-    _update_time = 0            # holds the time stamp at which the last sensor data was retrieved 
-    _update_time_uptime = 0     # holds the uptime at which the last sensor data was retrieved since boot
+    _time = 0            # holds the time stamp at which the last sensor data was retrieved
+    _uptime = 0     # holds the uptime at which the last sensor data was retrieved since boot
     _verbose = False
-    
+
     def __init__(self):
         pass
-    
+
     def __del__(self):
-        self._data_generator_process.terminate()
-        try:
-            self._data_generator_process.close()
-        except:
-            logging.debug('failed to close data generator process, killing it...')
-            self._data_generator_process.kill()
+        pass
 
     def _update_data(self):
-        
+
         """
-        this funciton is regularly called by the data_generator_process to 
+        this funciton is regularly called by the data_generator_process to
         provide updated values of the simulated sensor
         """
-        
-        while True:
 
-            logging.debug("updating data")
-            self._update_time = time.time()
-            self._update_time_uptime = uptime.uptime()
-            
-            self._acceleration_x_raw = self._acceleration_y_raw = self._acceleration_z_raw = sin(self._update_time*2*pi)
-            self._gyroscope_x_raw = self._gyroscope_y_raw = self._gyroscope_z_raw = cos(self._update_time*2*pi)
-            self._mag_x_raw = self._mag_y_raw = self._mag_z_raw = -1 * sin(self._update_time*2*pi)
-            
-            time.sleep(self._delta_t)
-        
-        
+        logging.debug("updating data")
+        self._time = time.time()
+        self._uptime = uptime.uptime()
+        self._acceleration_x_raw = self._acceleration_y_raw = self._acceleration_z_raw = sin(self._time*2*pi)
+        self._gyroscope_x_raw = self._gyroscope_y_raw = self._gyroscope_z_raw = cos(self._time*2*pi)
+        self._mag_x_raw = self._mag_y_raw = self._mag_z_raw = -1 * sin(self._time*2*pi)
+
     def begin(self):
-        
-        self._data_generator_process = Process(target = self._update_data, args=(self,))
-        self._data_generator_process.start()
+        pass
 
     def get_data(self):
+        self._update_data()
+
         return [
-            self._update_time,
-            self._update_time_uptime,
-            
+            self._time,
+            self._uptime,
+
             self._acceleration_x_raw,
             self._acceleration_y_raw,
             self._acceleration_z_raw,
@@ -88,11 +76,11 @@ class IMU():
             self._gyroscope_x_raw,
             self._gyroscope_y_raw,
             self._gyroscope_z_raw,
-            
+
             self._mag_x_raw,
             self._mag_y_raw,
             self._mag_z_raw,
-            
+
             self._temp_raw,
         ]
 
@@ -115,16 +103,17 @@ def main():
     ctx = zmq.Context()
     s = ctx.socket(zmq.PUB)
     s.connect(connect_to)
-    logging.debug(f'connected to zeroMQ IPC socket')
+    logging.debug('connected to zeroMQ IPC socket')
 
     #sync(connect_to)
 
     logging.debug('entering endless loop')
-    
+
     try:
         while True:
 
-            data = {config['id'] : imu.get_data()}
+            #data = {config['id'] : imu.get_data()}
+            data = imu.get_data()
 
             if config['print']:
                 print(json.dumps(data))
