@@ -58,6 +58,7 @@ class IMU():
         self._acceleration_x_raw = self._acceleration_y_raw = self._acceleration_z_raw = sin(self._time*2*pi)
         self._gyroscope_x_raw = self._gyroscope_y_raw = self._gyroscope_z_raw = cos(self._time*2*pi)
         self._mag_x_raw = self._mag_y_raw = self._mag_z_raw = -1 * sin(self._time*2*pi)
+        self._temp_raw = -1 * cos(self._time*2*pi*0.0001)
 
     def begin(self):
         pass
