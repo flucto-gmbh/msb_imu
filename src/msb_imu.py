@@ -10,13 +10,13 @@ import json
 try:
     from config import  init
 except ImportError:
-    print(f'faild to import init function from config.py')
+    print('faild to import init function from config.py')
     sys.exit(-1)
 
 try:
     from ICM20948 import ICM20948 as IMU
 except ImportError:
-    print(f'failed to import ICM20948 module')
+    print('failed to import ICM20948 module')
     sys.exit(-1)
 
 def main():

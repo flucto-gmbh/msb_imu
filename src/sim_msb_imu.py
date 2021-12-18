@@ -52,7 +52,7 @@ class IMU():
         provide updated values of the simulated sensor
         """
 
-        logging.debug("updating data")
+        # logging.debug("updating data")
         self._time = time.time()
         self._uptime = uptime.uptime()
         self._acceleration_x_raw = self._acceleration_y_raw = self._acceleration_z_raw = sin(self._time*2*pi)
@@ -99,7 +99,7 @@ def main():
 
     imu.begin()
 
-    connect_to = f'{config["ipc_protocol"]}:///tmp/msb:{config["ipc_port"]}'
+    connect_to = "tcp://127.0.0.1:5555"
     logging.debug(f'binding to {connect_to} for zeroMQ IPC')
     ctx = zmq.Context()
     s = ctx.socket(zmq.PUB)
