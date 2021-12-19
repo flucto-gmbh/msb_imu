@@ -1,4 +1,4 @@
-from config import init
+from msb_imu.src.imu_config import init
 
 def main():
     args = init()

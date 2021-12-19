@@ -4,12 +4,13 @@ import logging
 import uptime
 import time
 import json
+import pickle
 from math import sin, cos, pi
 # needs python 3.10
 # from dataclass import dataclass
 
 try:
-    from config import init
+    from imu_config import (init, IMU_TOPIC)
 except ImportError as e:
     print(f'failed to import init function from config.py: {e}')
     sys.exit(-1)
@@ -99,17 +100,15 @@ def main():
 
     imu.begin()
 
-    connect_to = "tcp://127.0.0.1:5555"
+    # connect_to = "tcp://127.0.0.1:5555"
+    connect_to = f'{config["ipc_protocol"]}:{config["ipc_port"]}'
     logging.debug(f'binding to {connect_to} for zeroMQ IPC')
     ctx = zmq.Context()
     s = ctx.socket(zmq.PUB)
     s.connect(connect_to)
     logging.debug('connected to zeroMQ IPC socket')
 
-    #sync(connect_to)
-
     logging.debug('entering endless loop')
-
     try:
         while True:
 
@@ -119,7 +118,15 @@ def main():
             if config['print']:
                 print(json.dumps(data))
 
-            s.send_pyobj(data)
+            # s.send_pyobj(data)
+            s.send_multipart(
+                [
+                    IMU_TOPIC,    # topic
+                    pickle.dumps( # serialize the payload
+                        data
+                    )
+                ]
+            )
 
             time.sleep(1/config['sample_rate'])
     except KeyboardInterrupt:

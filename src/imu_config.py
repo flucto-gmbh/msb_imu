@@ -7,6 +7,8 @@ import logging
 from datetime import datetime
 from os import path
 
+IMU_TOPIC = "imu".encode('utf-8')
+
 def signal_handler_exit(sig, frame):
     print('* msb_imu: bye')
     sys.exit(0)
@@ -135,7 +137,7 @@ def parse_arguments() -> dict:
     arg_parser.add_argument(
         '--ipc-protocol',
         help='the protocol used for IPC with zeroMQ',
-        default='ipc',
+        default='tcp://127.0.0.1',
         type=str,
     )
 

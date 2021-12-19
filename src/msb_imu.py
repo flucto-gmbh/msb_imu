@@ -8,7 +8,7 @@ import json
 # - no ipc flag einbauen fuer testing
 
 try:
-    from config import  init
+    from msb_imu.src.imu_config import  init
 except ImportError:
     print('faild to import init function from config.py')
     sys.exit(-1)
