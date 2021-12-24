@@ -5,7 +5,15 @@ import uptime
 import time
 import json
 import pickle
+import socket
 from math import sin, cos, pi
+
+try:
+    from IPhonePoller import IPhonePoller
+except Exception as e:
+    print(f'failed to import IPhonePoller')
+    sys.exit(-1)
+
 # needs python 3.10
 # from dataclass import dataclass
 
@@ -108,15 +116,23 @@ def main():
     s.connect(connect_to)
     logging.debug('connected to zeroMQ IPC socket')
 
+    logging.debug('creating iphone data poller')
+    iphone_poller = IPhonePoller(config)
+    iphone_poller.start()
+    logging.debug('successfully started iphone data poller')
+
     logging.debug('entering endless loop')
     try:
         while True:
 
             #data = {config['id'] : imu.get_data()}
-            data = imu.get_data()
+            if config['udp_address']:
+                data = iphone_poller.get_data()
+            else:
+                data = imu.get_data()
 
             if config['print']:
-                print(json.dumps(data))
+                print(data)
 
             # s.send_pyobj(data)
             s.send_multipart(

@@ -8,7 +8,7 @@ import json
 # - no ipc flag einbauen fuer testing
 
 try:
-    from msb_imu.src.imu_config import  init
+    from imu_config import  init
 except ImportError:
     print('faild to import init function from config.py')
     sys.exit(-1)
@@ -39,7 +39,7 @@ def main():
 
     imu.begin()
 
-    connect_to = f'{config["ipc_protocol"]}:///tmp/msb:{config["ipc_port"]}'
+    connect_to = f'{config["ipc_protocol"]}:{config["ipc_port"]}'
     logging.debug(f'binding to {connect_to} for zeroMQ IPC')
     ctx = zmq.Context()
     s = ctx.socket(zmq.PUB)
