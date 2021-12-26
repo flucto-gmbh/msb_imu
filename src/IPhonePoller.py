@@ -5,7 +5,7 @@ import json
 import numpy as np
 import time
 import uptime
-from threading import Thread
+from threading import (Thread, Lock)
 
 class IPhonePoller(Thread):
 
@@ -16,6 +16,7 @@ class IPhonePoller(Thread):
         self.address = config['udp_address']
         self.new_data = False
 
+        self._lock = Lock()
         self._loop = False
         self._data = {
             'accelerometerAccelerationX' : 0,
@@ -54,8 +55,16 @@ class IPhonePoller(Thread):
         self._loop = True
 
         while self._loop:
-            data, _ = self._socket.recvfrom(1024)
-            self._data = json.loads(data.decode('utf-8'))
+            # lock thread
+            data, _ = self._socket.recvfrom(8192)
+            data = data.decode('utf-8')
+            print(f'{data}')
+            try:
+                self._data = json.loads(data)
+            except Exception as e:
+                logging.error(f'failed to load json: {e}')
+                continue
+            
             self.new_data = True
 
     def stop(self):

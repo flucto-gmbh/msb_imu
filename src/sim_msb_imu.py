@@ -94,6 +94,39 @@ class IMU():
             self._temp_raw,
         ]
 
+def setup_socket(config : dict):
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.bind((config['udp_address'], config['udp_port']))
+    except Exception as e:
+        logging.fatal(f'failed to bind to socket: {config["udp_address"], config["udp_port"]}')
+        sys.exit(-1)
+    return s
+    
+def read_from_socket(s : socket.socket):
+    data = s.recv(4192)             # read data from socket
+    data = data.decode('utf-8')     # decode from byte to string
+    data = data.rstrip()            # remove trailing newline
+    data = data.split(',')          # split into list
+    data = list(map(float, data))   # convert all strings in the list to floats
+
+    # [time, uptime, uptime_acc, acc_x, acc_y, acc_z, uptime_rot, rot_x, rot_y, rot_z, uptime_mag, mag_x, mag_y, mag_z]
+    return [
+        data[0],
+        data[1],
+        data[3],
+        data[4],
+        data[5],
+        data[7],
+        data[8],
+        data[9],
+        data[11],
+        data[12],
+        data[13],
+        30.0,
+    ]
+ 
 
 def main():
 
@@ -116,18 +149,26 @@ def main():
     s.connect(connect_to)
     logging.debug('connected to zeroMQ IPC socket')
 
-    logging.debug('creating iphone data poller')
-    iphone_poller = IPhonePoller(config)
-    iphone_poller.start()
-    logging.debug('successfully started iphone data poller')
+    # setting up udp socket if necessary
+    if config['udp_address']:
+        udp_socket = setup_socket(config)
+
+    # logging.debug('creating iphone data poller')
+    # iphone_poller = IPhonePoller(config)
+    # iphone_poller.start()
+    # logging.debug('successfully started iphone data poller')
 
     logging.debug('entering endless loop')
     try:
         while True:
-
             #data = {config['id'] : imu.get_data()}
             if config['udp_address']:
-                data = iphone_poller.get_data()
+                data = read_from_socket(udp_socket)
+
+                if not data:
+                    logging.debug('failed to retrieve data from udp socket')
+                    continue
+
             else:
                 data = imu.get_data()
 
@@ -144,10 +185,14 @@ def main():
                 ]
             )
 
-            time.sleep(1/config['sample_rate'])
+            time.sleep(0.05)
     except KeyboardInterrupt:
         logging.info('msb_imu bye')
         sys.exit(0)
+    except Exception as e:
+        logging.fata(f'caught an Exception: {e}')
+        sys.exit(-1)
+        
 
 if __name__ == '__main__':
     main()
