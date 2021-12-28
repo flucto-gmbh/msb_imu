@@ -144,7 +144,7 @@ def parse_arguments() -> dict:
     arg_parser.add_argument(
         '--udp-address',
         help='Address to create an udp socket to allow streaming in of data from external sensors',
-        default="192.168.1.3",
+        default=None,
         type=str
     )
 
