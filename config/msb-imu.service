@@ -4,6 +4,7 @@ After=network.target
 StartLimitIntervalSec=0
 
 [Service]
+SyslogIdentifier=msb-imu
 Type=simple
 Restart=always
 RestartSec=1
