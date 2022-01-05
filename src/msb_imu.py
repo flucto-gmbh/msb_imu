@@ -2,13 +2,13 @@ import time
 import sys
 import zmq
 import logging
-import json
+import pickle
 
 # TODO:
 # - no ipc flag einbauen fuer testing
 
 try:
-    from imu_config import  init
+    from imu_config import (init, IMU_TOPIC)
 except ImportError:
     print('faild to import init function from config.py')
     sys.exit(-1)
@@ -53,12 +53,23 @@ def main():
     try:
         while True:
 
-            data = {config['id'] : imu.get_data()}
+            # data = {config['id'] : imu.get_data()}
+            data = imu.get_data()
 
             if config['print']:
-                print(json.dumps(data))
+                print(data)
+            # send multipart message:
 
-            s.send_pyobj(data)
+            s.send_multipart(
+                [
+                    IMU_TOPIC,    # topic
+                    pickle.dumps( # serialize the payload
+                        data
+                    )
+                ]
+            )
+
+            # s.send_pyobj(data)
 
             time.sleep(1/config['sample_rate'])
     except KeyboardInterrupt:
