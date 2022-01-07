@@ -7,6 +7,8 @@ import logging
 from datetime import datetime
 from os import path
 
+IMU_TOPIC = "imu".encode('utf-8')
+
 def signal_handler_exit(sig, frame):
     print('* msb_imu: bye')
     sys.exit(0)
@@ -127,16 +129,30 @@ def parse_arguments() -> dict:
 
     arg_parser.add_argument(
         '--ipc-port',
-        help='IPC port used by zeroMQ',
+        help='IPC port used to send data to msb_broker.service. Default is 5555',
         default=5555,
         type=int
     )
 
     arg_parser.add_argument(
         '--ipc-protocol',
-        help='the protocol used for IPC with zeroMQ',
-        default='ipc',
+        help='the protocol used for IPC with zeroMQ. Default is tcp://127.0.0.1',
+        default='tcp://127.0.0.1',
         type=str,
+    )
+
+    arg_parser.add_argument(
+        '--udp-address',
+        help='Address to create an udp socket to allow streaming in of data from external sensors',
+        default=None,
+        type=str
+    )
+
+    arg_parser.add_argument(
+        '--udp-port',
+        help='port for local udp socket. Default is 5670',
+        default=6666,
+        type=int
     )
 
     arg_parser.add_argument(

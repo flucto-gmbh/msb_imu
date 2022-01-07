@@ -1,10 +1,12 @@
 import smbus
-import time
 import uptime
 import logging
 import sys
+import time
 
 import RPi.GPIO as gpio
+
+from datetime import datetime
 
 from .ICM20948_registers import ICM20938_REGISTERS
 from .ICM20948_settings import ICM20948_SETTINGS
@@ -239,7 +241,7 @@ class ICM20948(ICM20938_REGISTERS, ICM20948_SETTINGS):
         # data = bus.read_i2c_block_data(self._address, ACCEL_OUT, 6)
 
         buff = self._i2c.read_i2c_block_data(self.address, self._AGB0_REG_ACCEL_XOUT_H, numbytes)
-        self._update_time = time.time()
+        self._update_time = datetime.utcnow().timestamp()
         self._update_time_uptime = uptime.uptime() 
         
         self._acceleration_x_raw = ((buff[0] << 8) | (buff[1] & 0xFF))

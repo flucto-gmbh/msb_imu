@@ -1,24 +1,22 @@
-import argparse
 import time
-import signal       # handles signals
 import sys
 import zmq
 import logging
-import json
+import pickle
 
 # TODO:
 # - no ipc flag einbauen fuer testing
 
 try:
-    from config import  init
+    from imu_config import (init, IMU_TOPIC)
 except ImportError:
-    print(f'faild to init function from config.py')
+    print('faild to import init function from config.py')
     sys.exit(-1)
 
 try:
     from ICM20948 import ICM20948 as IMU
 except ImportError:
-    print(f'failed to import ICM20948 module')
+    print('failed to import ICM20948 module')
     sys.exit(-1)
 
 def main():
@@ -41,7 +39,7 @@ def main():
 
     imu.begin()
 
-    connect_to = f'{config["ipc_protocol"]}:///tmp/msb:{config["ipc_port"]}'
+    connect_to = f'{config["ipc_protocol"]}:{config["ipc_port"]}'
     logging.debug(f'binding to {connect_to} for zeroMQ IPC')
     ctx = zmq.Context()
     s = ctx.socket(zmq.PUB)
@@ -55,12 +53,23 @@ def main():
     try:
         while True:
 
-            data = {config['id'] : imu.get_data()}
+            # data = {config['id'] : imu.get_data()}
+            data = imu.get_data()
 
             if config['print']:
-                print(json.dumps(data))
+                print(data)
+            # send multipart message:
 
-            s.send_pyobj(data)
+            s.send_multipart(
+                [
+                    IMU_TOPIC,    # topic
+                    pickle.dumps( # serialize the payload
+                        data
+                    )
+                ]
+            )
+
+            # s.send_pyobj(data)
 
             time.sleep(1/config['sample_rate'])
     except KeyboardInterrupt:
