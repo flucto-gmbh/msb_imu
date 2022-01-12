@@ -69,7 +69,8 @@ def parse_arguments() -> dict:
         '--logfile',
         help='path to logfile',
         type=str,
-        default=f'/tmp/msb_imu_{datetime.now().astimezone().strftime("%Y-%m-%dT%H-%M-%S%z")}.log',
+        # default=f'/tmp/msb_imu_{datetime.now().astimezone().strftime("%Y-%m-%dT%H-%M-%S%z")}.log',
+        default="",
     )
 
     arg_parser.add_argument(
