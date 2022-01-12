@@ -49,9 +49,14 @@ def main():
     #sync(connect_to)
 
     logging.debug('entering endless loop')
+
+    t_old = time.time()
+    t_cur = time.time()
     
     try:
         while True:
+
+            t_cur = time.time()
 
             # data = {config['id'] : imu.get_data()}
             data = imu.get_data()
@@ -69,9 +74,16 @@ def main():
                 ]
             )
 
-            # s.send_pyobj(data)
+            dt_sleep = (t_cur + (1/config['sample_rate'])) - time.time()
 
-            time.sleep(1/config['sample_rate'])
+            if dt_sleep > 0:
+                logging.debug(f'sleeping for {dt_sleep} s')
+                time.sleep(dt_sleep)
+
+            #while (time.time() - t_cur) < 1/config['sample_rate']:
+            #    time.sleep(0.001)
+
+            #time.sleep(1/config['sample_rate'])
     except KeyboardInterrupt:
         logging.info('msb_imu bye')
         sys.exit(0)

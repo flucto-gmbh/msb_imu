@@ -75,15 +75,15 @@ def parse_arguments() -> dict:
 
     arg_parser.add_argument(
         '--imu-output-div',
-        help='sensor output data rate. calculated by 1100/(1+output_data_div). default 21 (100 Hz)',
-        default=21,
+        help='sensor output data rate. calculated by 1100/(1+output_data_div). default 54 (20 Hz)',
+        default=54,
         type=int
     )
 
     arg_parser.add_argument(
         '--sample-rate',
         help='polling frequency with which data is retrieved from the sensor. must be >= ODR',
-        default=50,
+        default=20,
         type=int,
     )
 
