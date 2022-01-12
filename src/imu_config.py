@@ -180,7 +180,7 @@ def init() -> dict:
 
     logging.basicConfig(
         filename=config['logfile'],
-        level=config['verbose'] if logging.DEBUG else logging.WARNING,
+        level=logging.DEBUG if config['verbose'] else logging.WARNING,
         format='%(levelname)s: %(asctime)s %(message)s',
         datefmt='%Y%m%dT%H%M%S%z',
     )
