@@ -5,7 +5,7 @@ import logging
 import pickle
 import numpy as np
 
-from imu.src import ICM20948
+from ICM20948 import ICM20948
 
 # TODO:
 # - no ipc flag einbauen fuer testing
@@ -31,16 +31,17 @@ offsets = {
 def estimate_offsets(imu : ICM20948):
     global offsets
 
-    data = list
+    data = list()
 
-    for _ in range(10):
-        data.append(imu.get_data())
+    for _ in range(500):
+        t = imu.get_data()
+        data.append(t)
 
     data = np.array(data)
 
-    offsets['gyr_x'] = np.mean(data[5,:])
-    offsets['gyr_y'] = np.mean(data[6,:])
-    offsets['gyr_z'] = np.mean(data[7,:])
+    offsets['gyr_x'] = np.mean(data[:,5])
+    offsets['gyr_y'] = np.mean(data[:,6])
+    offsets['gyr_z'] = np.mean(data[:,7])
 
 def main():
 
@@ -87,6 +88,14 @@ def main():
 
             # data = {config['id'] : imu.get_data()}
             data = imu.get_data()
+            logging.debug(f'before offset correction: {data}')
+            data[2] *= -1
+            data[3] *= -1
+            data[4] *= -1
+            data[5] -= offsets['gyr_x']
+            data[6] -= offsets['gyr_y']
+            data[7] -= offsets['gyr_z']
+            logging.debug(f'after offset correction: {data}')
 
             if config['print']:
                 print(data)
