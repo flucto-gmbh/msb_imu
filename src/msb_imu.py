@@ -3,6 +3,9 @@ import sys
 import zmq
 import logging
 import pickle
+import numpy as np
+
+from imu.src import ICM20948
 
 # TODO:
 # - no ipc flag einbauen fuer testing
@@ -18,6 +21,26 @@ try:
 except ImportError:
     print('failed to import ICM20948 module')
     sys.exit(-1)
+
+offsets = {
+    'gyr_x' : 0,
+    'gyr_y' : 0,
+    'gyr_z' : 0,
+}
+
+def estimate_offsets(imu : ICM20948):
+    global offsets
+
+    data = list
+
+    for _ in range(10):
+        data.append(imu.get_data())
+
+    data = np.array(data)
+
+    offsets['gyr_x'] = np.mean(data[5,:])
+    offsets['gyr_y'] = np.mean(data[6,:])
+    offsets['gyr_z'] = np.mean(data[7,:])
 
 def main():
 
@@ -45,6 +68,10 @@ def main():
     s = ctx.socket(zmq.PUB)
     s.connect(connect_to)
     logging.debug(f'connected to zeroMQ IPC socket')
+
+    logging.debug(f'estimating offsets for gyroscope')
+    estimate_offsets(imu=imu)
+    logging.debug(f'offets: {offsets}')
 
     #sync(connect_to)
 
