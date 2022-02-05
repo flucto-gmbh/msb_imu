@@ -28,6 +28,15 @@ offsets = {
     'gyr_z' : 0,
 }
 
+def round_floats(o, precision=6):
+    if isinstance(o, float):
+        return round(o, precision)
+    if isinstance(o, dict):
+        return {k: round_floats(v) for k, v in o.items()}
+    if isinstance(o, (list, tuple)):
+        return [round_floats(x) for x in o]
+    return o
+
 def estimate_offsets(imu : ICM20948):
     global offsets
 
@@ -105,7 +114,9 @@ def main():
                 [
                     IMU_TOPIC,    # topic
                     pickle.dumps( # serialize the payload
-                        data
+                        round_floats(
+                            data
+                        )
                     )
                 ]
             )
